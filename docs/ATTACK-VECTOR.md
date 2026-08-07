@@ -37,7 +37,9 @@ work rather than the proving ground.
 
 The one hard constraint carried over: the protocol has an **unresolved address
 byte-order discrepancy** between two sources (little-endian per the spec/qdmr
-headers, big-endian per dmrconfig_dm32's worked examples). Getting it wrong
+headers, big-endian per dmrconfig_dm32's worked examples). **This has since been
+resolved as little-endian** by reading qdmr's byte-packing code directly; see
+risk 8. Getting it wrong
 corrupts every transfer. Therefore every phase below is **read-only until the
 byte order is empirically confirmed**.
 
@@ -120,7 +122,7 @@ drivers, so this is end-user polish, not a blocker.
 | 5 | **Bundling vendor USB drivers** (CH341SER, CP210x, PL2303) carries redistribution-license questions and bloats the installer. | Medium | Default to *detect and link* rather than *bundle and install*. Bundle only where the vendor license clearly permits redistribution. `DriverHelp.tsx` becomes the primary path, not the fallback. |
 | 6 | **Writing a bad codeplug can brick a radio.** | High | Mandatory read-before-write. Auto-snapshot the factory codeplug on first connect and store it immutably. Checksum validation on every write. Re-read and diff to verify. Never write a codeplug the app cannot first parse. |
 | 7 | Repo name describes a *specification*, not an application. | Low | Rename to `multi-radio-programmer`; keep the spec under `docs/`. `package.json` already uses the app name. |
-| 8 | **Address byte order is contested** between sources — little-endian per DM32-Protocol-Spec/qdmr headers, big-endian per dmrconfig_dm32's worked hex examples. Wrong choice corrupts every read and write. | High | Stay read-only until settled. Resolve by reading qdmr's actual `.cc` byte-packing code and confirming against a real dump from your radio in Phase 1. Never write before this is proven. |
+| 8 | ~~Address byte order is contested~~ — **RESOLVED (little-endian)**. Verified directly in qdmr `lib/dm32uv_interface.cc`, which packs `address[0] = (addr >> 0) & 0xff; address[1] = (addr >> 8) & 0xff; address[2] = (addr >> 16) & 0xff;` — least significant byte first. dmrconfig_dm32's big-endian hex examples were misread. | Closed | Locked in by `encodeAddress24` and asserted in `test/dm32uv-frames.test.ts`. Still requires confirmation against a real dump before any write is attempted. |
 | 9 | **NeonPlug asserts MIT in prose but ships no LICENSE file**, so incorporating its code into a GPL-3.0 project rests on a weak grant. | Medium | Use qdmr (explicit, file-backed GPL-3.0) as the porting source. Treat NeonPlug as a read-only structural reference and ask the author to add a LICENSE file. |
 | 10 | **31 flash pages and 32 logical block IDs have unknown purpose** — never touched by the OEM CPS in captured sessions. | Medium | Mark as "unknown, do not touch." The raw-image patching model already preserves them untouched by default. |
 
@@ -161,3 +163,47 @@ before writing driver code:
 5. Each radio driver ships with fixture-based tests using captured codeplug
    binaries, so drivers are testable without hardware in CI.
 6. Frequency data is cached, never redistributed.
+
+
+---
+
+## Phase 1 completion record
+
+Phase 1 delivered the DM-32UV serial transport as a read-only TypeScript port
+of qdmr's `dm32uv_interface.cc` / `c7000device.cc`.
+
+**Shipped**
+
+| File | Role |
+|---|---|
+| `src/main/drivers/baofeng-dm32uv/constants.ts` | Protocol constants, timings, value IDs, page sentinels |
+| `src/main/drivers/baofeng-dm32uv/frames.ts` | Pure frame codec and page-boundary transfer planner |
+| `src/main/drivers/baofeng-dm32uv/AddressMap.ts` | Bidirectional physical/virtual page translation |
+| `src/main/drivers/baofeng-dm32uv/session.ts` | Handshake, program mode, address discovery, image read |
+| `src/main/drivers/baofeng-dm32uv/preflight.ts` | Preconditions and failure-specific guidance |
+| `scripts/dump-dm32uv.ts` | Standalone read-only dump tool (`npm run dump`) |
+| `test/helpers/FakeRadio.ts` | In-memory radio emulator implementing `SerialTransport` |
+| `test/dm32uv-{frames,addressmap,session}.test.ts` | 51 new tests, no hardware required |
+
+Also added `setSignals` to the `SerialTransport` interface, since the radio has
+no exit-program-mode command and must be reset by cycling DTR.
+
+**Verification:** typecheck, lint (`--max-warnings 0`), 64 tests, and the full
+production build all pass.
+
+**New finding — virtual page 0 is unrepresentable.** Each 4 KiB page stores its
+virtual index in its own final byte, and qdmr treats both `0x00` and `0xff` as
+"unallocated" sentinels. A page legitimately holding virtual index 0 is
+therefore indistinguishable from an empty one, so the codeplug's virtual address
+space effectively begins at `0x1000` and bytes `0x0000-0x0fff` of any assembled
+image are always unmapped. This is documented in `constants.ts` and asserted by
+test. It matters for Phase 2: parsers must not assume offset 0 of the image is
+meaningful codeplug data.
+
+**Phase 1 exit criterion is not yet met.** Everything above is verified against
+an emulator; the protocol has not touched real hardware. The criterion is a
+successful dump from the physical radio, which requires the operator to run
+`npm run dump` on Windows with the cable attached. See
+`docs/DUMP-PROCEDURE.md`. Phase 2 must not begin until a real fixture exists,
+because the emulator can only confirm internal consistency — never that the
+port matches the radio.

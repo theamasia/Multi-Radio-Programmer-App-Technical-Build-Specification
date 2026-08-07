@@ -10,3 +10,6 @@ profiles/*.json
 !profiles/.gitkeep
 src/main/usb-drivers/installers/*.exe
 test/fixtures/*.bin
+
+# Real codeplug dumps are committed deliberately, but never overwrite the
+# factory snapshot -- see docs/DUMP-PROCEDURE.md

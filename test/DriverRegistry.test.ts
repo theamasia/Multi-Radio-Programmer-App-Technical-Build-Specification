@@ -9,6 +9,7 @@ function stubTransport(): SerialTransport {
     write: vi.fn(async () => undefined),
     read: vi.fn(async () => new Uint8Array()),
     flush: vi.fn(async () => undefined),
+    setSignals: vi.fn(async () => undefined),
   };
 }
 

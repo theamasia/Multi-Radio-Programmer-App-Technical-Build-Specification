@@ -15,6 +15,14 @@ export interface SerialTransport {
   read(length: number, timeoutMs: number): Promise<Uint8Array>;
   /** Discards any buffered inbound bytes. Call before a handshake. */
   flush(): Promise<void>;
+  /**
+   * Sets modem control lines.
+   *
+   * Radios in this family have no "exit program mode" command; the only way to
+   * return them to normal operation is to cycle DTR so the USB-serial adapter
+   * resets the device. Omitted properties are left unchanged.
+   */
+  setSignals(signals: { readonly dtr?: boolean; readonly rts?: boolean }): Promise<void>;
 }
 
 export interface SerialOptions {

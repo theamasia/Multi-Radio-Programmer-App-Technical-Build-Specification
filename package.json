@@ -18,7 +18,8 @@
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "test": "vitest run",
     "test:watch": "vitest",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "dump": "tsx scripts/dump-dm32uv.ts"
   },
   "dependencies": {
     "better-sqlite3": "11.10.0",
@@ -40,6 +41,7 @@
     "electron-builder": "24.13.3",
     "eslint": "8.57.0",
     "eslint-plugin-react-hooks": "4.6.2",
+    "tsx": "^4.16.2",
     "typescript": "5.5.3",
     "vite": "5.3.3",
     "vitest": "2.0.3"

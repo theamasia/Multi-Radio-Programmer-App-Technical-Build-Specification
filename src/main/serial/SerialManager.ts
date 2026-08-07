@@ -109,6 +109,19 @@ export class NodeSerialTransport implements SerialTransport {
     this.buffer = Buffer.alloc(0);
   }
 
+  async setSignals(signals: {
+    readonly dtr?: boolean;
+    readonly rts?: boolean;
+  }): Promise<void> {
+    const port = this.requirePort();
+    const options: { dtr?: boolean; rts?: boolean } = {};
+    if (signals.dtr !== undefined) options.dtr = signals.dtr;
+    if (signals.rts !== undefined) options.rts = signals.rts;
+    await new Promise<void>((resolve, reject) => {
+      port.set(options, (err) => (err ? reject(err) : resolve()));
+    });
+  }
+
   private requirePort(): SerialPort {
     if (!this.port) throw new Error(`Port ${this.path} is not open`);
     return this.port;
