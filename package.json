@@ -7,12 +7,15 @@
   "private": true,
   "main": "dist/main/index.js",
   "scripts": {
-    "dev": "concurrently -k \"npm:dev:renderer\" \"npm:dev:main\"",
+    "dev": "concurrently -k -n renderer,main,electron -c cyan,yellow,magenta \"npm:dev:renderer\" \"npm:dev:main\" \"npm:dev:electron\"",
     "dev:renderer": "vite",
     "dev:main": "tsc -p tsconfig.main.json --watch",
+    "dev:electron": "wait-on tcp:127.0.0.1:5173 http-get://127.0.0.1:5173 dist/preload/index.js dist/main/index.js && electron .",
     "build": "npm run typecheck && npm run build:renderer && npm run build:main",
     "build:renderer": "vite build",
     "build:main": "tsc -p tsconfig.main.json",
+    "start": "npm run build && electron .",
+    "start:built": "electron .",
     "package": "npm run build && electron-builder --win",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.main.json",
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
@@ -44,6 +47,7 @@
     "tsx": "^4.16.2",
     "typescript": "5.5.3",
     "vite": "5.3.3",
-    "vitest": "2.0.3"
+    "vitest": "2.0.3",
+    "wait-on": "^7.2.0"
   }
 }

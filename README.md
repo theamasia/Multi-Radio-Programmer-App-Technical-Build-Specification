@@ -20,12 +20,23 @@ Next up is Phase 1: porting the DM-32UV serial transport, read-only.
 
 ## Development
 
-```bash
-npm install     # rebuilds native modules against Electron's ABI
-npm run dev     # Vite renderer + main-process watch
+**Windows x64 is the only supported runtime and the only valid test target.**
+Linux and macOS machines are usable for writing code and running the unit tests,
+which work against fixtures and never touch hardware, but a build is not
+considered verified until it has run on native Windows with a real radio.
+
+```powershell
+npm install       # rebuilds native modules against Electron's ABI
+npm start         # build, then launch the app
+npm run dev       # Vite + main watch + Electron, with reload
+npm run dump      # read-only codeplug dump (no GUI needed)
 npm run typecheck && npm run lint && npm test
-npm run package # Windows NSIS installer
+npm run package   # Windows NSIS installer
 ```
+
+`npm run dev` waits for the Vite server and the compiled main/preload bundles
+before attaching Electron. Without that wait Electron opens a blank window and
+does not retry, which looks like a build failure but is only a race.
 
 ## Licensing and Attribution
 

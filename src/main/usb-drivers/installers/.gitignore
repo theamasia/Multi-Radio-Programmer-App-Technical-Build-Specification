@@ -1,0 +1,6 @@
+# Vendor USB-serial drivers are not redistributable under this project's licence.
+# Keep this directory present but empty in version control: electron-builder
+# needs the path to exist, and the binaries must never be committed.
+*
+!.gitignore
+!README.md
