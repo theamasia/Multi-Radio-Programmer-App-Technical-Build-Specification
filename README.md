@@ -6,15 +6,34 @@ offline-first frequency database searchable by ZIP code.
 
 ## Status
 
-Pre-implementation. The specification and execution plan are committed; code
-scaffolding has not begun.
+**Phase 0 complete.** Scaffold builds and passes CI (typecheck, lint, tests).
+Next up is Phase 1: porting the DM-32UV serial transport, read-only.
 
 ## Documents
 
-- [Technical Build Specification](docs/TECHNICAL-BUILD-SPEC.md) — architecture,
-  module boundaries, file structure, and external references.
 - [Attack Vector](docs/ATTACK-VECTOR.md) — execution strategy, phase sequencing,
-  risk register, and prior art to exploit.
+  and risk register. **Start here.**
+- [DM-32UV Protocol Notes](docs/protocol-notes/dm32uv-protocol.md) — prior-art
+  survey establishing that the protocol is already publicly mapped.
+- [Technical Build Specification](docs/TECHNICAL-BUILD-SPEC.md) — original
+  architecture and module boundaries.
+
+## Development
+
+```bash
+npm install     # rebuilds native modules against Electron's ABI
+npm run dev     # Vite renderer + main-process watch
+npm run typecheck && npm run lint && npm test
+npm run package # Windows NSIS installer
+```
+
+## Licensing and Attribution
+
+GPL-3.0-or-later. This is a deliberate choice, not an incidental one: it permits
+porting driver logic from [CHIRP](https://github.com/kk7ds/chirp) and from
+[qdmr](https://github.com/hmatuschek/qdmr), both copyleft, whose prior work
+makes this project tractable. Ported code carries attribution to its upstream
+source.
 
 ## Planned Stack
 

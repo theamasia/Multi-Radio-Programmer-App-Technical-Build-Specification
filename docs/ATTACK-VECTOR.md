@@ -1,85 +1,128 @@
 # Attack Vector — Multi-Radio Programmer App
 
+> **Revised after the DM-32UV prior-art survey.** The original plan treated the
+> DM-32UV DMR protocol as open-ended reverse engineering on a separate research
+> track. That premise was wrong: **qdmr ships complete, working, GPL-3.0
+> DM-32UV support**, and this project is GPL-3.0, so the protocol is a *port*,
+> not a research problem. The phase order below reflects that. See
+> [dm32uv-protocol.md](protocol-notes/dm32uv-protocol.md) for the evidence.
+
 Derived from `docs/TECHNICAL-BUILD-SPEC.md`. This document is the execution
 strategy: sequencing, risk register, and de-risking decisions. The spec says
 *what* to build; this says *how we attack it and in what order*.
 
-## Core Strategy: Two Independent Tracks
+## Core Strategy
 
-The spec's build order is mostly linear, which is a mistake — it puts the
-highest-risk item (DM-32UV DMR reverse engineering) on the critical path to a
-shippable app. Split into two tracks that never block each other:
+The original two-track split (certain analog work vs. uncertain DMR research)
+existed only to keep DM-32UV reverse engineering off the critical path. That
+justification is gone. Three independent open-source projects have already
+mapped the protocol, and the most complete one is license-compatible:
 
-- **Track A (Certain / Value Path)** — Analog radios + offline frequency DB.
-  Every component has known prior art. Ships a genuinely useful app on its own.
-- **Track B (Uncertain / Research Path)** — DM-32UV DMR codeplug protocol.
-  Open-ended reverse engineering. Time-boxed, behind a feature flag, never
-  gates a release.
+- **[qdmr](https://github.com/hmatuschek/qdmr)** — GPL-3.0, 343 stars. Ships
+  `lib/dm32uv_interface.{cc,hh}` (serial transport) and
+  `lib/dm32uv_codeplug.{cc,hh}` (byte-level structures) as merged, working code.
+  GPL-3.0 → GPL-3.0 means this can be a close line-by-line port.
+- **[DM32-Protocol-Spec](https://github.com/infamy/DM32-Protocol-Spec)** — prose
+  protocol spec (connection sequence, command frames, memory layout, data
+  structures) that qdmr's own maintainer used as reference.
+- **[NeonPlug](https://github.com/infamy/NeonPlug)** — an actively developed
+  TypeScript/Web Serial CPS for this exact radio. The closest thing to "what
+  our driver should look like," *but its license is asserted only in prose with
+  no LICENSE file* — read for structure, do not copy until that is fixed.
 
-Track A must produce a working end-to-end vertical slice before Track B starts
-consuming meaningful effort.
+So the strategy inverts: **target the DM-32UV first**, because it is the radio
+you physically have, the protocol is documented, and the reference
+implementation is portable. Analog/CHIRP drivers become the follow-on breadth
+work rather than the proving ground.
+
+The one hard constraint carried over: the protocol has an **unresolved address
+byte-order discrepancy** between two sources (little-endian per the spec/qdmr
+headers, big-endian per dmrconfig_dm32's worked examples). Getting it wrong
+corrupts every transfer. Therefore every phase below is **read-only until the
+byte order is empirically confirmed**.
 
 ## Phase Plan
 
-### Phase 0 — Foundation (Track A)
-Repo scaffold, TypeScript strict, Electron main/preload/renderer split with
-`contextIsolation: true` and `nodeIntegration: false`, ESLint + Vitest, GitHub
-Actions CI (typecheck → lint → test → build), `electron-builder` NSIS target.
+### Phase 0 — Foundation ✅ complete
+Electron + TypeScript (strict) + React scaffold, GPL-3.0, Windows CI running
+typecheck → lint → test → build. All serial and database access confined to the
+main process, enforced by an ESLint rule that fails the build if the renderer
+imports `serialport`, `better-sqlite3`, `electron`, or `node:fs`.
+`IRadioDriver` and `SerialTransport` contracts defined so drivers are testable
+against recorded byte streams with no hardware attached.
 
-Deliberate choice: **all serial I/O lives in the main process**, exposed to the
-renderer only through narrow, validated IPC channels. The renderer never gets
-Node access. This is the single most important architectural constraint —
-retrofitting it later is expensive.
+### Phase 1 — Port the DM-32UV transport, read-only
+Translate qdmr's `dm32uv_interface.cc` and the `c7000device` base class into
+TypeScript: handshake, V-frame metadata queries, program-mode entry, and the
+read frame. Replicate qdmr's **dynamic address discovery** — read the V-frame
+pointer tuples at connect time rather than hardcoding offsets, because the
+memory map differs across firmware variants.
 
-Exit criteria: `npm run build` produces an installable Windows artifact from CI.
+Preflight checks belong here, as first-class validated conditions with
+actionable messages rather than mystery timeouts: 115200 baud, VFO on an analog
+channel, radio not charging over USB, volume near 50%.
 
-### Phase 1 — Vertical Slice: One Radio, End to End (Track A)
-Do **not** build the layers horizontally. Build one narrow path all the way
-through: port enumeration → chipset detection → UV-5R handshake → read
-codeplug → render channel grid → write codeplug back → verify by re-read.
+**Exit criteria:** dump a full codeplug image from your radio and save it as a
+test fixture. This single artifact settles the byte-order question empirically
+and unblocks everything downstream.
 
-Scope: `SerialManager`, `portDetection`, `IRadioDriver`, one ported CHIRP
-analog driver (UV-5R family), minimal `ChannelEditor.tsx`.
+### Phase 2 — Codeplug parsing against fixtures
+Port `dm32uv_codeplug.cc` structures (48-byte channel records, zones, contacts,
+RX groups, radio IDs, settings) into TypeScript decoders. All work is now
+offline against the Phase 1 fixture, so it is fast, deterministic, and fully
+CI-testable without hardware.
 
-Exit criteria: real radio round-trips a codeplug without corruption. This is
-the moment the project stops being theoretical.
+**Exit criteria:** parse the fixture and round-trip it back to a byte-identical
+image. Byte-identical re-serialization is the proof that the parse is complete
+and that unmapped regions survive untouched.
 
-### Phase 2 — Driver Breadth (Track A)
-With the interface proven against real hardware, port additional CHIRP analog
-drivers. Each new radio is now a contained, low-risk unit of work. Add the
-`gmrs-generic` driver with the bundled fixed 30-channel table and the
-Part 95E transmit-license warnings in the UI.
+### Phase 3 — First write, with maximum paranoia
+Only now enable writing. Order of operations: snapshot factory codeplug
+immutably → patch the raw image rather than regenerating it → write → re-read →
+diff. Refuse to write any image the parser cannot first read back.
 
-### Phase 3 — Offline Frequency Database (Track A)
-`better-sqlite3` schema, migrations, `SqliteClient`, seeded GMRS channels, ZIP→
-county resolver, `FrequencyBrowser.tsx` reading **local DB only**. No network
-code in this phase at all — proves the offline-first contract by construction.
+Instrument the `0x06` / `0xC0` / `0xC8` / `0x48` response bytes with defensive
+logging: their meanings are documented as *unverified guesses* upstream, so
+confirming them empirically is a deliverable of this phase.
 
-### Phase 4 — Sync Layer (Track A)
+**Exit criteria:** a channel edit appears on the radio's display and survives a
+power cycle.
+
+### Phase 4 — Offline frequency database
+`better-sqlite3` schema, migrations, seeded fixed GMRS channel table, ZIP→county
+resolver, `FrequencyBrowser.tsx` reading **local SQLite only**. No network code
+in this phase at all, which proves the offline-first contract by construction.
+
+### Phase 5 — Sync layer
 `RepeaterBookSync` + `SyncScheduler` bolted onto the already-working local read
-path. Idempotent upserts keyed by record ID. Sync failure must be a non-event
+path. Idempotent upserts keyed by record ID. A sync failure must be a non-event
 for the UI.
 
-### Phase 5 — Windows Driver Install (Track A)
-`DriverInstallManager`, chipset catalog, bundled vendor installers, elevation
-via UAC, `DriverHelp.tsx` fallback. Sequenced late on purpose: during dev you
-already have working drivers, so this is polish for end users, not a blocker.
+### Phase 6 — Analog driver breadth
+Now port CHIRP's analog drivers (UV-5R family, GMRS-generic). With the interface
+already proven against real hardware, each additional radio is a contained,
+low-risk unit of work. GMRS ships with the fixed 30-channel table and Part 95E
+transmit-license warnings.
 
-### Phase 6 — DM-32UV (Track B, parallel from Phase 2 onward)
-Protocol capture and mapping, documented incrementally in
-`docs/protocol-notes/dm32uv-protocol.md`. Ships when it ships.
+### Phase 7 — Windows driver install and packaging
+`DriverInstallManager`, chipset detection, `DriverHelp.tsx`, signed NSIS
+installer. Sequenced last on purpose: your dev machine already has working
+drivers, so this is end-user polish, not a blocker.
 
 ## Risk Register
 
 | # | Risk | Severity | Mitigation |
 |---|---|---|---|
 | 1 | **CHIRP is GPL-3.0.** Porting its driver logic to TypeScript creates a derivative work, obligating this app to ship under GPL-3.0 with source. | Blocking | Adopt GPL-3.0 for the whole repo from commit one. Cheap here — the repo is already public. The alternative (clean-room reimplementation from protocol docs only) costs months. Decide before any driver code is written; retrofitting a license across contributors is painful. |
-| 2 | **DM-32UV protocol is unmapped** and may resist reverse engineering. Spec treats it as a build step; it is a research project. | High | Isolate to Track B behind a feature flag. Survey prior art first (see below) before spending a single hour on Portmon capture. Time-box the survey to days, not weeks. |
+| 2 | ~~DM-32UV protocol is unmapped.~~ **Retired.** The survey found qdmr's merged GPL-3.0 implementation plus two corroborating specs. | Retired | No longer a risk. Replaced by risk 8 below. |
 | 3 | **`better-sqlite3` is a native module** and must be rebuilt against Electron's ABI, not Node's. Classic `NODE_MODULE_VERSION` mismatch. | Medium | Wire `electron-builder install-app-deps` into `postinstall` in Phase 0, before any DB code exists. Pin Electron and better-sqlite3 versions together; CI builds catch drift. |
 | 4 | **RepeaterBook API is now key-gated** (`x-api-key` / `RBApp-Token`) and licensed for personal use only; commercial keys are a separate track. | Medium | Obtain the key before Phase 4 starts. Architecture already tolerates its absence — Phase 3 ships useful without it. Do not redistribute cached RepeaterBook data in the installer. |
 | 5 | **Bundling vendor USB drivers** (CH341SER, CP210x, PL2303) carries redistribution-license questions and bloats the installer. | Medium | Default to *detect and link* rather than *bundle and install*. Bundle only where the vendor license clearly permits redistribution. `DriverHelp.tsx` becomes the primary path, not the fallback. |
 | 6 | **Writing a bad codeplug can brick a radio.** | High | Mandatory read-before-write. Auto-snapshot the factory codeplug on first connect and store it immutably. Checksum validation on every write. Re-read and diff to verify. Never write a codeplug the app cannot first parse. |
-| 7 | Repo name describes a *specification*, not an application. | Low | Rename to `multi-radio-programmer` once building starts; keep the spec under `docs/`. |
+| 7 | Repo name describes a *specification*, not an application. | Low | Rename to `multi-radio-programmer`; keep the spec under `docs/`. `package.json` already uses the app name. |
+| 8 | **Address byte order is contested** between sources — little-endian per DM32-Protocol-Spec/qdmr headers, big-endian per dmrconfig_dm32's worked hex examples. Wrong choice corrupts every read and write. | High | Stay read-only until settled. Resolve by reading qdmr's actual `.cc` byte-packing code and confirming against a real dump from your radio in Phase 1. Never write before this is proven. |
+| 9 | **NeonPlug asserts MIT in prose but ships no LICENSE file**, so incorporating its code into a GPL-3.0 project rests on a weak grant. | Medium | Use qdmr (explicit, file-backed GPL-3.0) as the porting source. Treat NeonPlug as a read-only structural reference and ask the author to add a LICENSE file. |
+| 10 | **31 flash pages and 32 logical block IDs have unknown purpose** — never touched by the OEM CPS in captured sessions. | Medium | Mark as "unknown, do not touch." The raw-image patching model already preserves them untouched by default. |
 
 ## Prior Art to Exploit Before Building
 
