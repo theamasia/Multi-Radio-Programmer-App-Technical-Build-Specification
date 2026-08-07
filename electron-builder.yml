@@ -1,0 +1,23 @@
+appId: com.theamasia.multiradioprogrammer
+productName: Multi-Radio Programmer
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**/*
+  - package.json
+asarUnpack:
+  - "**/node_modules/better-sqlite3/**"
+  - "**/node_modules/serialport/**"
+extraResources:
+  - from: src/main/usb-drivers/installers
+    to: usb-drivers
+    filter: ["**/*"]
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true

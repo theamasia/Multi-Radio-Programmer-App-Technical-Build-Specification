@@ -1,0 +1,47 @@
+{
+  "name": "multi-radio-programmer",
+  "version": "0.1.0",
+  "description": "Windows desktop app for programming multiple two-way radios over USB with an offline-first frequency database",
+  "license": "GPL-3.0-or-later",
+  "author": "A T",
+  "private": true,
+  "main": "dist/main/index.js",
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:renderer\" \"npm:dev:main\"",
+    "dev:renderer": "vite",
+    "dev:main": "tsc -p tsconfig.main.json --watch",
+    "build": "npm run typecheck && npm run build:renderer && npm run build:main",
+    "build:renderer": "vite build",
+    "build:main": "tsc -p tsconfig.main.json",
+    "package": "npm run build && electron-builder --win",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.main.json",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "better-sqlite3": "11.10.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "serialport": "12.0.0",
+    "zustand": "4.5.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "7.6.11",
+    "@types/node": "20.14.10",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "@typescript-eslint/eslint-plugin": "7.16.0",
+    "@typescript-eslint/parser": "7.16.0",
+    "@vitejs/plugin-react": "4.3.1",
+    "concurrently": "8.2.2",
+    "electron": "31.2.0",
+    "electron-builder": "24.13.3",
+    "eslint": "8.57.0",
+    "eslint-plugin-react-hooks": "4.6.2",
+    "typescript": "5.5.3",
+    "vite": "5.3.3",
+    "vitest": "2.0.3"
+  }
+}
