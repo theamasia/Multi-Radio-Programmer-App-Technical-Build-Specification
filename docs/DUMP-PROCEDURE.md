@@ -19,10 +19,17 @@ cd Multi-Radio-Programmer-App-Technical-Build-Specification
 npm install
 ```
 
-If `npm install` fails building `better-sqlite3` or `serialport`, install with
-`npm install --ignore-scripts`. The dump tool does not need either module
-compiled — `serialport` ships prebuilt binaries, and SQLite is not used until
-Phase 4.
+If `npm install` fails building `better-sqlite3`, install with
+`npm install --ignore-scripts`. The dump tool does not need it: `better-sqlite3`
+is imported only by `src/main/db/schema.ts`, which the Electron main process
+loads and this tool never touches.
+
+`serialport` needs no rebuild at all. It ships N-API prebuilds
+(`node.napi.node`), and N-API is ABI-stable across Node and Electron versions, so
+the same binary works under both. This matters because `postinstall` runs
+`electron-builder install-app-deps`, which rebuilds native modules against
+Electron's ABI (125) rather than Node 20's (115) — that affects `better-sqlite3`
+but not the serial layer this tool depends on.
 
 ## Preflight
 
