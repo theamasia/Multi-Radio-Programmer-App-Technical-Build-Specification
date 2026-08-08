@@ -2,7 +2,16 @@ import { app, BrowserWindow } from 'electron';
 import { join } from 'node:path';
 import { registerSerialIpc } from './ipc/serial.ipc.js';
 
-const isDev = !app.isPackaged;
+/**
+ * Whether to load the renderer from the Vite dev server rather than from disk.
+ *
+ * Keyed on an explicit flag rather than `!app.isPackaged`. Any unpackaged run
+ * counts as "not packaged", including `npm start`, which builds the renderer to
+ * disk and has no dev server running -- that combination loaded
+ * http://localhost:5173 and failed with ERR_CONNECTION_REFUSED. Only
+ * `npm run dev` passes `--dev`, so the built app now runs from its own files.
+ */
+const isDev = process.argv.includes('--dev');
 
 function createWindow(): void {
   const window = new BrowserWindow({

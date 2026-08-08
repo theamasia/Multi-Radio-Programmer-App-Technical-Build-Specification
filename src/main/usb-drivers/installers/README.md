@@ -30,8 +30,14 @@ If you want an installer that ships a driver for your own use, place the vendor
 installer here before running `npm run package`. Do not commit whatever you put
 here — see the `.gitignore` entry in this directory.
 
-For the DM-32UV specifically, the driver that actually works with counterfeit
-PL2303 chips is Prolific's older **3.3.11.152** release. Recent Prolific drivers
-deliberately refuse to bind to clone chips and report Code 10, which is the most
-common cause of the cable failing to enumerate a COM port at all. See
-[docs/DUMP-PROCEDURE.md](../../../../docs/DUMP-PROCEDURE.md).
+Which driver you need depends on the cable's chip, so check its USB ID before
+downloading anything:
+
+- **`1A86:7523` (WCH CH340)** — what this project's reference cable uses. Windows
+  11 installs a working driver automatically, so nothing needs to go in this
+  directory at all.
+- **`067B:23A3` (Prolific PL2303)** — if the chip is a counterfeit, recent
+  Prolific drivers refuse to bind and report Code 10. The older **3.3.11.152**
+  release is the usual workaround.
+
+See [docs/DUMP-PROCEDURE.md](../../../../docs/DUMP-PROCEDURE.md).

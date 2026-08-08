@@ -11,7 +11,7 @@ design, until Phase 3.
 
 ## Before you start
 
-Run this on Windows, where the Prolific driver lives. Node 20 or newer.
+Run this on Windows, the only supported runtime. Node 20 or newer.
 
 ```powershell
 git clone https://github.com/theamasia/Multi-Radio-Programmer-App-Technical-Build-Specification.git
@@ -57,10 +57,21 @@ Source for the analog-VFO and charging quirks:
 npm run dump -- --list
 ```
 
-You want a port reporting **USB 067b:23a3** (Prolific PL2303). If nothing
-appears, the driver is missing or the cable is a counterfeit PL2303 that recent
-Windows drivers deliberately reject — the usual fix is Prolific's older
-3.3.11.152 driver.
+Identify the cable by its USB vendor and product ID. Both of these chips are
+used in DM-32UV programming cables, and they need different drivers:
+
+| Reported ID | Chip | Notes |
+| --- | --- | --- |
+| `1A86:7523` | WCH CH340/CH341 | **Confirmed working with this project's cable.** Windows 11 supplies a driver automatically; no vendor download needed. |
+| `067B:23A3` | Prolific PL2303 | Counterfeit chips are common and recent Prolific drivers deliberately reject them with a Code 10. The workaround is Prolific's older 3.3.11.152 driver. |
+
+Do not assume the cable is Prolific. The reference cable used to develop this
+project enumerates as `1A86:7523`, a CH340, and needed no driver installation at
+all on Windows 11 23H2.
+
+If no new port appears, take the baseline first: list the ports with the cable
+unplugged, plug it in, and list again. Fixed ports such as `COM1` are usually
+motherboard serial devices and are not the radio.
 
 ## Dump
 

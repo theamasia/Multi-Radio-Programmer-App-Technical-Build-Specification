@@ -10,7 +10,7 @@
     "dev": "concurrently -k -n renderer,main,electron -c cyan,yellow,magenta \"npm:dev:renderer\" \"npm:dev:main\" \"npm:dev:electron\"",
     "dev:renderer": "vite",
     "dev:main": "tsc -p tsconfig.main.json --watch",
-    "dev:electron": "wait-on tcp:127.0.0.1:5173 http-get://127.0.0.1:5173 dist/preload/index.js dist/main/index.js && electron .",
+    "dev:electron": "wait-on tcp:127.0.0.1:5173 http-get://127.0.0.1:5173 dist/preload/index.js dist/main/index.js && electron . --dev",
     "build": "npm run typecheck && npm run build:renderer && npm run build:main",
     "build:renderer": "vite build",
     "build:main": "tsc -p tsconfig.main.json",
