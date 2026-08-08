@@ -35,22 +35,22 @@ describe('AddressMap', () => {
     expect(map.virtualPages()).toEqual([0x3000, 0x9000]);
   });
 
-  it('detects holes in an otherwise contiguous virtual range', () => {
+  it('reports unallocated pages inside the mapped range', () => {
     const map = new AddressMap();
     map.map(0x1000, 0x1000);
     map.map(0x2000, 0x3000);
-    expect(map.virtualGaps()).toEqual([0x2000]);
+    expect(map.unmappedVirtualPages()).toEqual([0x2000]);
   });
 
-  it('reports no gaps for a contiguous range', () => {
+  it('reports nothing unallocated for a fully allocated range', () => {
     const map = new AddressMap();
     map.map(0x8000, 0x1000);
     map.map(0x9000, 0x2000);
     map.map(0xa000, 0x3000);
-    expect(map.virtualGaps()).toEqual([]);
+    expect(map.unmappedVirtualPages()).toEqual([]);
   });
 
-  it('reports no gaps for an empty map', () => {
-    expect(new AddressMap().virtualGaps()).toEqual([]);
+  it('reports nothing unallocated for an empty map', () => {
+    expect(new AddressMap().unmappedVirtualPages()).toEqual([]);
   });
 });

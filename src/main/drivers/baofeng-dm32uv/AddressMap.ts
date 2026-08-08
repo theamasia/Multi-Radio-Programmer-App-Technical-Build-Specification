@@ -63,13 +63,18 @@ export class AddressMap {
   }
 
   /**
-   * Virtual pages missing from an otherwise contiguous run.
+   * Virtual pages that carry no allocated page, within the mapped range.
    *
-   * A gap means a region of the codeplug was never located, so any image
-   * assembled from this map would contain holes. Callers should treat a
-   * non-empty result as a reason to abort rather than to guess.
+   * These are expected, not an error. The radio allocates pages dynamically and
+   * most of the address space is empty: on the captured factory radio only 71
+   * of 200 pages carried a live logical ID, with 15 tagged `0x00` and 114
+   * tagged `0xff`. A sparse result is the normal state of a healthy codeplug.
+   *
+   * Callers must not treat these offsets as data. The assembled image fills
+   * them with {@link UNMAPPED_FILL} purely so it can be a flat array, and no
+   * write may ever target an offset listed here.
    */
-  virtualGaps(): readonly number[] {
+  unmappedVirtualPages(): readonly number[] {
     const pages = [...this.physicalByVirtual.keys()].sort((a, b) => a - b);
     const first = pages[0];
     const last = pages[pages.length - 1];

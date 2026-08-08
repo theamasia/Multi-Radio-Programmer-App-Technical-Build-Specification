@@ -21,6 +21,7 @@ import {
   KNOWN_FIRMWARE_PREFIXES,
   OPCODE,
   PAGE_SIZE,
+  UNMAPPED_FILL,
   RESPONSE,
   TIMEOUT_MS,
   UNALLOCATED_PAGE_MARKERS,
@@ -294,16 +295,12 @@ export class DM32UVSession {
       );
     }
 
-    const gaps = map.virtualGaps();
-    if (gaps.length > 0) {
-      throw new ProtocolError(
-        `${gaps.length} codeplug page(s) are missing from the address map, starting at ` +
-          `0x${(gaps[0] as number).toString(16)}. Refusing to assemble an image with holes. ` +
-          'Retry the read; if it persists, capture the address map for analysis.',
-      );
-    }
-
-    const image = new Uint8Array(lastPage + PAGE_SIZE);
+    // No gap check here on purpose. The radio allocates pages dynamically and
+    // an unallocated page is the normal case, not a failed read -- most of the
+    // address space is empty on a healthy radio. Unallocated pages are filled
+    // with UNMAPPED_FILL and reported via map.unmappedVirtualPages() so that
+    // nothing downstream mistakes filler for codeplug data.
+    const image = new Uint8Array(lastPage + PAGE_SIZE).fill(UNMAPPED_FILL);
     for (let i = 0; i < virtualPages.length; i++) {
       const virtualAddress = virtualPages[i] as number;
       const physicalAddress = map.toPhysical(virtualAddress);

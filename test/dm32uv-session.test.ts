@@ -184,17 +184,30 @@ describe('DM32UVSession.readCodeplugImage', () => {
     expect(image[0x1010]).toBe(0x11);
   });
 
-  it('refuses to assemble an image containing holes', async () => {
+  it('assembles a sparse image, filling unallocated pages', async () => {
+    // 0xff marks an unallocated page, so virtual page 2 has nothing behind it.
+    // That is the normal state of a codeplug, not a failed read: the radio
+    // allocates pages dynamically and most of the range is empty.
     const radio = new FakeRadio({
       pageLayout: new Map([
         [0x000000, 0x01],
-        [0x001000, 0xff], // leaves a hole at virtual page 2
+        [0x001000, 0xff],
         [0x002000, 0x03],
       ]),
     });
     const s = session(radio);
     await s.connect();
-    await expect(s.readCodeplugImage()).rejects.toThrow(/missing from the address map/i);
+    const { image, map } = await s.readCodeplugImage();
+
+    expect(map.unmappedVirtualPages()).toEqual([0x2000]);
+
+    // The allocated pages still land at their virtual offsets.
+    expect(image[0x1010]).toBe(0x10);
+    expect(image[0x3010]).toBe(0x12);
+
+    // The unallocated page is filler, not data.
+    expect(image[0x2000]).toBe(0xff);
+    expect(image[0x2fff]).toBe(0xff);
   });
 
   it('fails clearly when no pages map at all', async () => {

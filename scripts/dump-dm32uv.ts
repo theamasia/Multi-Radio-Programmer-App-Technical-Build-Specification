@@ -119,6 +119,16 @@ async function main(): Promise<void> {
     });
     process.stdout.write('\r  100%  \n');
 
+    const unmapped = map.unmappedVirtualPages();
+    console.log(`  Mapped ${map.size} allocated page(s)`);
+    if (unmapped.length > 0) {
+      console.log(
+        `  ${unmapped.length} page(s) inside the range are unallocated and were ` +
+          'filled with 0xff. This is normal: the radio allocates pages dynamically ' +
+          'and most of the address space is empty.',
+      );
+    }
+
     mkdirSync(dirname(outPath), { recursive: true });
     writeFileSync(outPath, image);
 
@@ -149,7 +159,7 @@ function describeMap(map: AddressMap): unknown {
       virtual: `0x${hex(virtual)}`,
       physical: `0x${hex(map.toPhysical(virtual) ?? 0)}`,
     })),
-    gaps: map.virtualGaps().map((gap) => `0x${hex(gap)}`),
+    unmappedPages: map.unmappedVirtualPages().map((page) => `0x${hex(page)}`),
   };
 }
 

@@ -100,6 +100,16 @@ export const EXPECTED_MODEL_ID = 'DP570UV';
 export const PAGE_SIZE = 0x1000;
 
 /**
+ * Byte written into virtual pages that the radio has not allocated.
+ *
+ * The assembled image is a flat array, so unallocated pages need some filler.
+ * `0xff` matches the erased-flash convention and the marker the radio itself
+ * uses for an empty page, but it is filler and not data read from the radio.
+ * Never write these regions back: consult `AddressMap.unmappedVirtualPages()`.
+ */
+export const UNMAPPED_FILL = 0xff;
+
+/**
  * Page-marker values that mean "this page is not allocated".
  *
  * Each 4 KiB page records its virtual page index in its own final byte. qdmr
