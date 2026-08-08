@@ -6,8 +6,15 @@
  * https://github.com/infamy/DM32-Protocol-Spec.
  */
 
-/** The DM-32UV programming cable presents as a Prolific PL2303. */
-export const DM32UV_USB = { vendorId: '067b', productId: '23a3' } as const;
+/**
+ * One known DM-32UV cable identity, kept for reference only.
+ *
+ * Do not use this for detection. Cables ship with whichever USB-serial bridge
+ * chip is cheapest -- the reference cable for this project is a WCH CH340
+ * (1a86:7523), not a Prolific. `scripts/dump-dm32uv.ts` holds the full table of
+ * recognised chips.
+ */
+export const DM32UV_USB_PROLIFIC = { vendorId: '067b', productId: '23a3' } as const;
 
 export const DM32UV_SERIAL = {
   baudRate: 115200,

@@ -18,8 +18,34 @@ import { DM32UV_PREFLIGHT, explainFailure } from '../src/main/drivers/baofeng-dm
 import { DM32UVSession } from '../src/main/drivers/baofeng-dm32uv/session.js';
 import { listPorts, NodeSerialTransport } from '../src/main/serial/SerialManager.js';
 
-const USB_VENDOR_ID = '067b';
-const USB_PRODUCT_IDS = new Set(['23a3', '2303', '23c3']);
+/**
+ * USB-serial bridge chips used in DM-32UV programming cables.
+ *
+ * There is no single "official" cable. Vendors ship whichever bridge chip is
+ * cheapest, so detection cannot key on one vendor ID. The reference cable for
+ * this project is a CH340 (1a86:7523); an earlier revision of this script
+ * assumed Prolific only and refused to run against it.
+ */
+const KNOWN_CABLE_CHIPS: readonly {
+  vendorId: string;
+  productIds: readonly string[];
+  chip: string;
+}[] = [
+  { vendorId: '1a86', productIds: ['7523', '5523', '7522'], chip: 'WCH CH340/CH341' },
+  { vendorId: '067b', productIds: ['23a3', '2303', '23c3', '23d3'], chip: 'Prolific PL2303' },
+  { vendorId: '10c4', productIds: ['ea60', 'ea70'], chip: 'Silicon Labs CP210x' },
+  { vendorId: '0403', productIds: ['6001', '6015'], chip: 'FTDI FT232' },
+];
+
+function describeChip(vendorId?: string, productId?: string): string | null {
+  const v = vendorId?.toLowerCase();
+  const p = productId?.toLowerCase();
+  if (v === undefined || p === undefined) return null;
+  const entry = KNOWN_CABLE_CHIPS.find(
+    (candidate) => candidate.vendorId === v && candidate.productIds.includes(p),
+  );
+  return entry?.chip ?? null;
+}
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -45,9 +71,14 @@ async function main(): Promise<void> {
   const portPath = explicitPort ?? autoDetect(ports);
   if (portPath === null) {
     printPorts(ports);
+    const known = KNOWN_CABLE_CHIPS.map(
+      (candidate) => `${candidate.chip} (${candidate.vendorId}:${candidate.productIds[0]})`,
+    ).join(', ');
     fail(
-      'Could not find a Prolific PL2303 programming cable (USB 067b:23a3). ' +
-        'Pass --port <path> to override.',
+      'No recognised programming cable found. Looked for: ' +
+        `${known}. If your cable uses a different bridge chip, it may still ` +
+        'work: pass --port <path> to use it anyway, for example ' +
+        '"npm run dump -- --port COM3".',
     );
   }
   console.log(`Using port: ${portPath}\n`);
@@ -143,13 +174,11 @@ function summarize(image: Uint8Array): string {
   return lines.join('\n');
 }
 
-function autoDetect(ports: readonly { path: string; vendorId?: string; productId?: string }[]):
-  | string
-  | null {
+function autoDetect(
+  ports: readonly { path: string; vendorId?: string; productId?: string }[],
+): string | null {
   const match = ports.find(
-    (port) =>
-      port.vendorId?.toLowerCase() === USB_VENDOR_ID &&
-      USB_PRODUCT_IDS.has(port.productId?.toLowerCase() ?? ''),
+    (port) => describeChip(port.vendorId, port.productId) !== null,
   );
   return match?.path ?? null;
 }
@@ -163,7 +192,9 @@ function printPorts(ports: readonly { path: string; vendorId?: string; productId
   for (const port of ports) {
     const usb =
       port.vendorId !== undefined ? ` (USB ${port.vendorId}:${port.productId ?? '????'})` : '';
-    console.log(`  ${port.path}${usb}`);
+    const chip = describeChip(port.vendorId, port.productId);
+    const tag = chip !== null ? ` -- ${chip}, recognised programming cable` : '';
+    console.log(`  ${port.path}${usb}${tag}`);
   }
 }
 
