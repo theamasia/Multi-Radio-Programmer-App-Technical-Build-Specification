@@ -53,3 +53,53 @@ export const CHANNEL = {
 
 /** Total channel slots addressable across every bank. */
 export const TOTAL_CHANNEL_SLOTS = CHANNEL_BANK_COUNT * CHANNELS_PER_BANK;
+
+/**
+ * Zone bank pages, as logical block IDs. `0x5c` is zone bank slot 1.
+ */
+export const ZONE_BANK_FIRST_ID = 0x5c;
+export const ZONE_BANK_LAST_ID = 0x64;
+
+/** Zone records are 145 bytes, following the same 16-byte page header. */
+export const ZONE_RECORD_SIZE = 0x91;
+export const ZONES_PER_BANK = 28;
+
+/** Offsets within a zone record. */
+export const ZONE = {
+  name: 0x00,
+  nameLength: 0x10,
+  /** Number of channels in the zone. */
+  channelCount: 0x10,
+  /** Channel numbers, 16-bit little-endian, 1-based. */
+  channels: 0x11,
+  maxChannels: 64,
+} as const;
+
+/**
+ * Digital contacts. `0x44` holds the contact list.
+ *
+ * Records start at the page base with no header, and no count field has been
+ * located, so the parser stops at the first record without a usable name.
+ */
+export const CONTACT_PAGE_ID = 0x44;
+export const CONTACT_RECORD_SIZE = 0x18;
+export const CONTACTS_PER_PAGE = 170;
+
+/** Offsets within a contact record. */
+export const CONTACT = {
+  name: 0x02,
+  nameLength: 0x10,
+  /** DMR ID, 24-bit little-endian. `0xffffff` is the All Call broadcast ID. */
+  dmrId: 0x13,
+  dmrIdLength: 3,
+  /**
+   * Call type. `⚠️ DERIVED` -- the factory image uses `0x03`, `0x04` and
+   * `0x05`, and only `0x05` is confirmed, because it is the record carrying
+   * the All Call ID. The other two are not yet distinguished and are exposed
+   * as a raw byte rather than guessed at.
+   */
+  callType: 0x16,
+} as const;
+
+/** The DMR broadcast address. */
+export const ALL_CALL_ID = 0xffffff;

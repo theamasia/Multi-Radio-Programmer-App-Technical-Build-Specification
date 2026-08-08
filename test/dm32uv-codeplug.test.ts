@@ -4,7 +4,10 @@ import { describe, expect, it } from 'vitest';
 import { AddressMap } from '../src/main/drivers/baofeng-dm32uv/AddressMap.js';
 import { decodeFrequency, encodeFrequency } from '../src/main/drivers/baofeng-dm32uv/codeplug/bcd.js';
 import { Codeplug } from '../src/main/drivers/baofeng-dm32uv/codeplug/Codeplug.js';
-import { CHANNEL_BANK_FIRST_ID } from '../src/main/drivers/baofeng-dm32uv/codeplug/layout.js';
+import {
+  ALL_CALL_ID,
+  CHANNEL_BANK_FIRST_ID,
+} from '../src/main/drivers/baofeng-dm32uv/codeplug/layout.js';
 
 const FIXTURE_DIR = join(__dirname, 'fixtures');
 const IMAGE = join(FIXTURE_DIR, 'dp570uv-factory-codeplug.bin');
@@ -118,5 +121,63 @@ describe('Codeplug parsed from real hardware', () => {
     if (channel === undefined) throw new Error('fixture has no channels');
     // 0x49 is one of the 17 unallocated pages on this radio.
     expect(() => codeplug.writeChannel({ ...channel, bankId: 0x49 })).toThrow(/not allocated/i);
+  });
+});
+
+describe('Zones parsed from real hardware', () => {
+  it('parses the two factory zones and their channel lists', () => {
+    const zones = loadFixture().zones();
+    expect(zones).toHaveLength(2);
+    expect(zones[0]?.name).toBe('Zone 1');
+    expect(zones[0]?.channels).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+    expect(zones[1]?.name).toBe('Func Demo');
+    expect(zones[1]?.channels).toEqual([17, 18, 19, 20, 21, 22, 23, 24, 25]);
+  });
+
+  it('accounts for exactly the channels that exist', () => {
+    // The zones partition the 25 channels with no overlap and nothing left
+    // over. An off-by-one in the record stride or the 16-bit channel list
+    // would break this, and it is independent of how the channels parse.
+    const codeplug = loadFixture();
+    const referenced = codeplug.zones().flatMap((zone) => zone.channels);
+    expect(new Set(referenced).size).toBe(referenced.length);
+    expect([...referenced].sort((a, b) => a - b)).toEqual(
+      codeplug.channels().map((_, index) => index + 1),
+    );
+  });
+
+  it('re-encodes every zone byte-identically', () => {
+    const codeplug = loadFixture();
+    const before = Uint8Array.from(codeplug.rawImage);
+    for (const zone of codeplug.zones()) codeplug.writeZone(zone);
+    expect(Buffer.from(codeplug.rawImage).equals(Buffer.from(before))).toBe(true);
+  });
+});
+
+describe('Contacts parsed from real hardware', () => {
+  it('parses the factory contacts including All Call', () => {
+    const contacts = loadFixture().contacts();
+    expect(contacts).toHaveLength(10);
+    expect(contacts[0]?.name).toBe('Contacts 1');
+    expect(contacts[0]?.dmrId).toBe(1);
+    // The tenth contact carries the DMR broadcast address, which is what
+    // identified the 24-bit little-endian ID field in the first place.
+    expect(contacts[9]?.dmrId).toBe(ALL_CALL_ID);
+  });
+
+  it('re-encodes every contact byte-identically despite 0xff name padding', () => {
+    // Contact names are padded with 0xff while channel names are padded with
+    // 0x00, in the same image. Normalising either would corrupt the other.
+    const codeplug = loadFixture();
+    const before = Uint8Array.from(codeplug.rawImage);
+    for (const contact of codeplug.contacts()) codeplug.writeContact(contact);
+    expect(Buffer.from(codeplug.rawImage).equals(Buffer.from(before))).toBe(true);
+  });
+
+  it('rejects a DMR ID that does not fit in 24 bits', () => {
+    const codeplug = loadFixture();
+    const contact = codeplug.contacts()[0];
+    if (contact === undefined) throw new Error('fixture has no contacts');
+    expect(() => codeplug.writeContact({ ...contact, dmrId: 0x1000000 })).toThrow(/24 bits/i);
   });
 });
