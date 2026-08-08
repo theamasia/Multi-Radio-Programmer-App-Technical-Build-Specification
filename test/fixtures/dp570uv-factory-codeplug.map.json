@@ -1,0 +1,452 @@
+{
+  "pageCount": 107,
+  "pages": [
+    {
+      "virtual": "0x001000",
+      "physical": "0x097000"
+    },
+    {
+      "virtual": "0x002000",
+      "physical": "0x0aa000"
+    },
+    {
+      "virtual": "0x003000",
+      "physical": "0x011000"
+    },
+    {
+      "virtual": "0x004000",
+      "physical": "0x023000"
+    },
+    {
+      "virtual": "0x005000",
+      "physical": "0x039000"
+    },
+    {
+      "virtual": "0x006000",
+      "physical": "0x007000"
+    },
+    {
+      "virtual": "0x007000",
+      "physical": "0x001000"
+    },
+    {
+      "virtual": "0x008000",
+      "physical": "0x0c3000"
+    },
+    {
+      "virtual": "0x009000",
+      "physical": "0x004000"
+    },
+    {
+      "virtual": "0x00a000",
+      "physical": "0x005000"
+    },
+    {
+      "virtual": "0x00b000",
+      "physical": "0x08d000"
+    },
+    {
+      "virtual": "0x00c000",
+      "physical": "0x0c8000"
+    },
+    {
+      "virtual": "0x00d000",
+      "physical": "0x00e000"
+    },
+    {
+      "virtual": "0x00e000",
+      "physical": "0x027000"
+    },
+    {
+      "virtual": "0x00f000",
+      "physical": "0x00f000"
+    },
+    {
+      "virtual": "0x010000",
+      "physical": "0x00c000"
+    },
+    {
+      "virtual": "0x011000",
+      "physical": "0x014000"
+    },
+    {
+      "virtual": "0x012000",
+      "physical": "0x0bf000"
+    },
+    {
+      "virtual": "0x013000",
+      "physical": "0x015000"
+    },
+    {
+      "virtual": "0x014000",
+      "physical": "0x017000"
+    },
+    {
+      "virtual": "0x015000",
+      "physical": "0x010000"
+    },
+    {
+      "virtual": "0x016000",
+      "physical": "0x026000"
+    },
+    {
+      "virtual": "0x017000",
+      "physical": "0x029000"
+    },
+    {
+      "virtual": "0x018000",
+      "physical": "0x073000"
+    },
+    {
+      "virtual": "0x019000",
+      "physical": "0x02b000"
+    },
+    {
+      "virtual": "0x01a000",
+      "physical": "0x072000"
+    },
+    {
+      "virtual": "0x01b000",
+      "physical": "0x02c000"
+    },
+    {
+      "virtual": "0x01c000",
+      "physical": "0x02a000"
+    },
+    {
+      "virtual": "0x01d000",
+      "physical": "0x0ad000"
+    },
+    {
+      "virtual": "0x01e000",
+      "physical": "0x02d000"
+    },
+    {
+      "virtual": "0x01f000",
+      "physical": "0x020000"
+    },
+    {
+      "virtual": "0x020000",
+      "physical": "0x002000"
+    },
+    {
+      "virtual": "0x021000",
+      "physical": "0x02e000"
+    },
+    {
+      "virtual": "0x022000",
+      "physical": "0x041000"
+    },
+    {
+      "virtual": "0x023000",
+      "physical": "0x0a2000"
+    },
+    {
+      "virtual": "0x024000",
+      "physical": "0x02f000"
+    },
+    {
+      "virtual": "0x025000",
+      "physical": "0x030000"
+    },
+    {
+      "virtual": "0x026000",
+      "physical": "0x032000"
+    },
+    {
+      "virtual": "0x027000",
+      "physical": "0x033000"
+    },
+    {
+      "virtual": "0x028000",
+      "physical": "0x034000"
+    },
+    {
+      "virtual": "0x029000",
+      "physical": "0x035000"
+    },
+    {
+      "virtual": "0x02a000",
+      "physical": "0x036000"
+    },
+    {
+      "virtual": "0x02b000",
+      "physical": "0x037000"
+    },
+    {
+      "virtual": "0x02c000",
+      "physical": "0x038000"
+    },
+    {
+      "virtual": "0x02d000",
+      "physical": "0x03a000"
+    },
+    {
+      "virtual": "0x02e000",
+      "physical": "0x03b000"
+    },
+    {
+      "virtual": "0x02f000",
+      "physical": "0x03c000"
+    },
+    {
+      "virtual": "0x030000",
+      "physical": "0x00d000"
+    },
+    {
+      "virtual": "0x031000",
+      "physical": "0x049000"
+    },
+    {
+      "virtual": "0x032000",
+      "physical": "0x03f000"
+    },
+    {
+      "virtual": "0x033000",
+      "physical": "0x03d000"
+    },
+    {
+      "virtual": "0x034000",
+      "physical": "0x003000"
+    },
+    {
+      "virtual": "0x035000",
+      "physical": "0x03e000"
+    },
+    {
+      "virtual": "0x036000",
+      "physical": "0x040000"
+    },
+    {
+      "virtual": "0x037000",
+      "physical": "0x031000"
+    },
+    {
+      "virtual": "0x038000",
+      "physical": "0x042000"
+    },
+    {
+      "virtual": "0x039000",
+      "physical": "0x043000"
+    },
+    {
+      "virtual": "0x03a000",
+      "physical": "0x044000"
+    },
+    {
+      "virtual": "0x03b000",
+      "physical": "0x028000"
+    },
+    {
+      "virtual": "0x03c000",
+      "physical": "0x045000"
+    },
+    {
+      "virtual": "0x03d000",
+      "physical": "0x084000"
+    },
+    {
+      "virtual": "0x03e000",
+      "physical": "0x046000"
+    },
+    {
+      "virtual": "0x03f000",
+      "physical": "0x047000"
+    },
+    {
+      "virtual": "0x040000",
+      "physical": "0x048000"
+    },
+    {
+      "virtual": "0x041000",
+      "physical": "0x04b000"
+    },
+    {
+      "virtual": "0x042000",
+      "physical": "0x008000"
+    },
+    {
+      "virtual": "0x043000",
+      "physical": "0x00a000"
+    },
+    {
+      "virtual": "0x044000",
+      "physical": "0x00b000"
+    },
+    {
+      "virtual": "0x045000",
+      "physical": "0x0b1000"
+    },
+    {
+      "virtual": "0x046000",
+      "physical": "0x0b2000"
+    },
+    {
+      "virtual": "0x047000",
+      "physical": "0x0b3000"
+    },
+    {
+      "virtual": "0x048000",
+      "physical": "0x0b4000"
+    },
+    {
+      "virtual": "0x04b000",
+      "physical": "0x0c5000"
+    },
+    {
+      "virtual": "0x04f000",
+      "physical": "0x021000"
+    },
+    {
+      "virtual": "0x050000",
+      "physical": "0x01a000"
+    },
+    {
+      "virtual": "0x051000",
+      "physical": "0x0ac000"
+    },
+    {
+      "virtual": "0x052000",
+      "physical": "0x01b000"
+    },
+    {
+      "virtual": "0x053000",
+      "physical": "0x01f000"
+    },
+    {
+      "virtual": "0x054000",
+      "physical": "0x006000"
+    },
+    {
+      "virtual": "0x055000",
+      "physical": "0x016000"
+    },
+    {
+      "virtual": "0x056000",
+      "physical": "0x081000"
+    },
+    {
+      "virtual": "0x057000",
+      "physical": "0x019000"
+    },
+    {
+      "virtual": "0x058000",
+      "physical": "0x024000"
+    },
+    {
+      "virtual": "0x059000",
+      "physical": "0x012000"
+    },
+    {
+      "virtual": "0x05a000",
+      "physical": "0x04d000"
+    },
+    {
+      "virtual": "0x05b000",
+      "physical": "0x01c000"
+    },
+    {
+      "virtual": "0x05c000",
+      "physical": "0x0c1000"
+    },
+    {
+      "virtual": "0x05d000",
+      "physical": "0x013000"
+    },
+    {
+      "virtual": "0x05e000",
+      "physical": "0x07e000"
+    },
+    {
+      "virtual": "0x05f000",
+      "physical": "0x022000"
+    },
+    {
+      "virtual": "0x060000",
+      "physical": "0x082000"
+    },
+    {
+      "virtual": "0x061000",
+      "physical": "0x0ae000"
+    },
+    {
+      "virtual": "0x062000",
+      "physical": "0x0af000"
+    },
+    {
+      "virtual": "0x063000",
+      "physical": "0x0b0000"
+    },
+    {
+      "virtual": "0x064000",
+      "physical": "0x069000"
+    },
+    {
+      "virtual": "0x065000",
+      "physical": "0x018000"
+    },
+    {
+      "virtual": "0x066000",
+      "physical": "0x01d000"
+    },
+    {
+      "virtual": "0x067000",
+      "physical": "0x009000"
+    },
+    {
+      "virtual": "0x069000",
+      "physical": "0x0bc000"
+    },
+    {
+      "virtual": "0x06a000",
+      "physical": "0x01e000"
+    },
+    {
+      "virtual": "0x06b000",
+      "physical": "0x096000"
+    },
+    {
+      "virtual": "0x06c000",
+      "physical": "0x051000"
+    },
+    {
+      "virtual": "0x06d000",
+      "physical": "0x025000"
+    },
+    {
+      "virtual": "0x06e000",
+      "physical": "0x07f000"
+    },
+    {
+      "virtual": "0x074000",
+      "physical": "0x065000"
+    },
+    {
+      "virtual": "0x075000",
+      "physical": "0x059000"
+    },
+    {
+      "virtual": "0x07c000",
+      "physical": "0x098000"
+    }
+  ],
+  "unmappedPages": [
+    "0x049000",
+    "0x04a000",
+    "0x04c000",
+    "0x04d000",
+    "0x04e000",
+    "0x068000",
+    "0x06f000",
+    "0x070000",
+    "0x071000",
+    "0x072000",
+    "0x073000",
+    "0x076000",
+    "0x077000",
+    "0x078000",
+    "0x079000",
+    "0x07a000",
+    "0x07b000"
+  ]
+}
