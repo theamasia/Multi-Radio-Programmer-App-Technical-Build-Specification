@@ -28,70 +28,100 @@ the radio itself, which is the expensive way to find out you were wrong.
   list membership), but reverting means re-entering them by hand or doing a
   factory reset.
 
-## The edits
+## What the radio can and cannot do from the keypad
 
-Each one is chosen to break a specific ambiguity. The values are deliberately
-odd so they are easy to find in a hex dump and unlikely to collide with
-something else.
+Not every edit is possible without the vendor CPS software, so the plan is
+split. Round one needs nothing but the radio itself.
 
-### 1. Scan list names of clearly different lengths
+Menu paths below are quoted from the DM-32UV manual
+([manuals.plus](https://gl.manuals.plus/ae/1005009174631341)). Some copies of
+that manual are machine-translated, so an item shown there as `Editar nome`
+appears as **Edit Name** on an English radio.
 
-- Rename `Scan List 1` to `AB`
-- Rename `Scan List 2` to `SCANLISTLONGNAME` (16 characters)
+| Structure | Keypad? | Why |
+|---|---|---|
+| Scan lists | **Yes** | `Scan -> Scan List` has Edit Name, Add Chan and per-channel Delete |
+| Radio ID | **Yes** | `Settings -> Channel Set -> Radio ID` has Edit ID and Edit Name |
+| Zones | **Partly** | `Zone` has Add Channel; creating a zone from scratch is not documented |
+| Contacts | **No** | The manual gives no front-panel procedure for name plus DMR ID plus call type |
+| RX groups | **No** | No front-panel menu exists for them at all |
+| Boot text | **No** | No front-panel menu for the power-on display text |
 
-Resolves the name field width, since both current names are 11 characters and
-therefore indistinguishable from a variable-width field. The 16-character name
-also exercises the case where a name exactly fills its field and gets no
-terminator, which the writer handles but has never seen in real data.
+## Round one: keypad only
 
-### 2. Scan list membership, distinct from the zone counts
+This resolves the scan lists completely, locates the radio ID structure, and
+re-confirms the zone parse. No software to install and nothing writes to the
+radio except its own menu system.
 
-- Set `Scan List 1` to hold exactly three channels: **2, 7 and 20**
+### 1. Rename both scan lists
 
-The current scan-list counts are 16 and 9, which are also the two zones'
-channel counts. That coincidence is precisely what makes the current reading
-unprovable. Three non-consecutive channels are unmistakable.
+`Main Menu -> Scan -> Scan List -> [select list] -> Edit Name`
 
-### 3. RX group name and member count
+- Scan list 1 becomes `AB`
+- Scan list 2 becomes `SCANLISTLONGNAME`
 
-- Rename `RX Group 1` to `RG`
-- Set `RX Group 1` to contain exactly two contacts
+Both current names are 11 characters, which is exactly why the field width
+cannot be pinned down. Two lengths that differ settle it. The 16-character name
+also exercises a name that exactly fills its field and gets no terminator,
+which the writer handles but has never seen in real data.
 
-This attacks the arithmetic that does not add up: the assumed 109-byte stride
-leaves 97 bytes for 3-byte entries, and 97 is not divisible by three. Changing
-the member count will show where the count field lives and where the entry list
-actually starts.
+If the radio refuses a name that long, use the longest it accepts and say what
+the limit was. That limit is itself the answer.
 
-### 4. A new contact with a distinctive ID
+Letters are typed on the numeric keypad; `#` switches input method and the back
+key deletes a character at a time.
 
-- Add an 11th contact named `QQ` with DMR ID **3141592**
+### 2. Cut scan list 1 down to three channels
 
-Confirms the record stride past the tenth contact. More importantly, the
-contact parser currently stops at the first record without a name, because no
-count field was ever found. If a count field does exist, adding a contact will
-change it from 10 to 11 somewhere, and the diff will point straight at it.
+`Main Menu -> Scan -> Scan List -> [list 1] -> Edit/View List -> [channel] -> Delete`
 
-### 5. A third zone
+then
 
-- Create a zone named `ZZ` containing only channel 25
+`Main Menu -> Scan -> Scan List -> [list 1] -> Add Chan`
 
-The zone header count byte should move from 2 to 3. Zones are already decoded,
-so this is a cheap confirmation that the parse holds beyond two records.
+Target membership: **channel 1, channel 7, channel 20**.
 
-### 6. The radio's own DMR ID
+Note the manual's restriction: the first channel in a scan list cannot be
+deleted. So delete everything below it, leaving one member, then add 7 and 20.
 
-- Set the radio ID to **1234567**
+The current counts are 16 and 9, which happen to equal the two zones' channel
+counts. That coincidence is the whole problem. Three non-consecutive channels
+cannot be confused with anything else in the image.
 
-The radio ID structure has not been located at all. Setting a distinctive value
-lets the diff tool find it by searching for its encoding.
+### 3. Set a distinctive radio ID
 
-### 7. Boot banner text
+`Main Menu -> Settings -> Channel Set -> Radio ID -> Edit ID`
 
-- Change the welcome text to `DIFFTEST`
+- ID becomes **1234567**, then `Edit Name` becomes `RIDTEST`, then **Save**
 
-Page `0x04` holds the settings, but only the banner strings are identified, and
-the value at `0x4040` is still unexplained. A known string change anchors the
-page.
+The radio ID structure has not been located anywhere in the image. A
+distinctive value can be found by searching for its encoding, which is what the
+diff tool's `--find` does.
+
+Use that number, not your own DMR ID. The first fixture is already public and
+this one probably will be too.
+
+### 4. Add a channel to a zone
+
+`Main Menu -> Zone -> [select Func Demo] -> Add Channel -> [channel 1]`
+
+The zone's count byte should move from 9 to 10. Zones are already decoded, so
+this is a cheap confirmation that the parse holds when a zone changes. It
+deliberately breaks the tidy property that the zones partition the channels
+exactly once, which is a fair test of whether anything quietly depended on it.
+
+## Round two, only if needed: the CPS
+
+Contacts, RX groups and boot text need Baofeng's own programming software,
+available from the [Baofeng download area](https://www.baofengradio.com/pages/download)
+(CPS V1.60 and V1.45 are listed for the DM-32UV). Round one may well be enough,
+so there is no reason to install it yet.
+
+Two things worth knowing if you do. The CPS can read the radio and save the
+codeplug to a file, which is a genuine restore path this project does not have
+yet, so back up the factory configuration in the CPS before changing anything.
+And download only the CPS. The download area also offers firmware, which has
+nothing to do with this and carries real risk.
 
 ## Taking the dump
 
