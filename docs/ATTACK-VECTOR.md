@@ -200,10 +200,13 @@ image are always unmapped. This is documented in `constants.ts` and asserted by
 test. It matters for Phase 2: parsers must not assume offset 0 of the image is
 meaningful codeplug data.
 
-**Phase 1 exit criterion is not yet met.** Everything above is verified against
-an emulator; the protocol has not touched real hardware. The criterion is a
-successful dump from the physical radio, which requires the operator to run
-`npm run dump` on Windows with the cable attached. See
-`docs/DUMP-PROCEDURE.md`. Phase 2 must not begin until a real fixture exists,
-because the emulator can only confirm internal consistency — never that the
-port matches the radio.
+**Phase 1 exit criterion is met.** The protocol has run against real hardware:
+`test/fixtures/dp570uv-factory-codeplug.bin` is a full 512,000-byte codeplug
+read from the physical radio over the cable, with its address map alongside it.
+
+The emulator work that preceded it could only ever confirm internal
+consistency, never that the port matched the radio. Two things it could not
+have caught turned up immediately on real hardware: the cable is a WCH CH340,
+not the Prolific PL2303 the docs assumed, and the radio allocates codeplug
+pages sparsely, so 17 of 200 pages are simply absent rather than the read
+having failed. Both were fixed before the dump succeeded.

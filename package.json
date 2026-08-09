@@ -22,7 +22,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "postinstall": "electron-builder install-app-deps",
-    "dump": "tsx scripts/dump-dm32uv.ts"
+    "dump": "tsx scripts/dump-dm32uv.ts",
+    "diff": "tsx scripts/diff-codeplugs.ts"
   },
   "dependencies": {
     "better-sqlite3": "11.10.0",
